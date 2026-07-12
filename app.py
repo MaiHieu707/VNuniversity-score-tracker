@@ -7,7 +7,7 @@ from school_region import REGION_MAP, SCHOOL_NAME_MAP
 # 1. Cấu hình trang
 st.set_page_config(layout="wide", page_title="Hệ Thống Lọc Điểm Chuẩn", page_icon="🎓")
 
-# 2. CSS giao diện
+# 2. CSS giao diện (thêm style cho bảng HTML)
 custom_style = """
 <style>
     .stApp { background-color: #1e1e2f; color: #ffffff; }
@@ -18,13 +18,34 @@ custom_style = """
         color: white !important;
         border: 1px solid #4a4a6a !important;
     }
-    [data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; border: 1px solid #27293d; margin-bottom: 25px; }
     h1 { color: #8c54ff; font-weight: 700 !important; }
     button[data-testid="stFormSubmitButton"] {
         background-color: #8c54ff !important; color: white !important; border-radius: 10px !important;
         border: none !important; width: 100% !important; padding: 10px 0px !important; font-weight: bold !important;
     }
     div.stButton > button { background-color: #27293d; color: #69b1ff; border: 1px solid #4a4a6a; border-radius: 8px; }
+    /* Style cho bảng HTML */
+    .score-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #4a4a6a;
+    }
+    .score-table th {
+        background-color: #8c54ff;
+        color: white;
+        padding: 10px;
+        font-size: 14px;
+        text-align: left;
+    }
+    .score-table td {
+        padding: 10px;
+        border-bottom: 1px solid #27293d;
+        font-size: 13px;
+    }
+    .score-table tr:hover { background-color: #2e2e42; }
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
@@ -119,7 +140,28 @@ with st.sidebar.form(key='filter_form'):
         }
         st.session_state.current_page = 1
 
-# 6. Hiển thị kết quả
+# 6. Hàm chuyển DataFrame -> HTML table
+def dataframe_to_html(df, col_ma_nganh=None):
+    """Trả về chuỗi HTML table từ DataFrame, với cột Mã ngành được tô màu nhẹ nếu có"""
+    html = '<table class="score-table"><thead><tr>'
+    for col in df.columns:
+        html += f'<th>{col}</th>'
+    html += '</tr></thead><tbody>'
+    for _, row in df.iterrows():
+        html += '<tr>'
+        for col in df.columns:
+            value = row[col]
+            if pd.isna(value):
+                value = ''
+            # Nếu là cột điểm, hiển thị 2 chữ số thập phân
+            if 'điểm' in col.lower() and isinstance(value, (int, float)):
+                value = f'{value:.2f}'
+            html += f'<td>{value}</td>'
+        html += '</tr>'
+    html += '</tbody></table>'
+    return html
+
+# 7. Hiển thị kết quả
 st.title("🎓 HỆ THỐNG LỌC ĐIỂM CHUẨN ĐẠI HỌC")
 
 if st.session_state.search_params is not None:
@@ -178,16 +220,18 @@ if st.session_state.search_params is not None:
             school_display = SCHOOL_NAME_MAP.get(school, school)
             st.markdown(f"<h4 style='color:#69b1ff; padding-top:15px;'>🏫 Trường: {school_display}</h4>", unsafe_allow_html=True)
 
-            display_df = grouped.get_group(school).drop(columns=[col_truong] + cols_to_hide, errors='ignore')
+            school_df = grouped.get_group(school).drop(columns=[col_truong] + cols_to_hide, errors='ignore')
 
-            if col_ma_nganh and col_ma_nganh in display_df.columns:
-                cols = [col_ma_nganh] + [c for c in display_df.columns if c != col_ma_nganh]
-                display_df = display_df[cols]
+            # Đưa cột Mã ngành lên đầu nếu có
+            if col_ma_nganh and col_ma_nganh in school_df.columns:
+                cols = [col_ma_nganh] + [c for c in school_df.columns if c != col_ma_nganh]
+                school_df = school_df[cols]
 
-            # Sửa use_container_width thành width='stretch' (phiên bản mới)
-            st.dataframe(display_df, width='stretch', hide_index=True)
+            # Hiển thị bảng HTML thay vì st.dataframe
+            html_table = dataframe_to_html(school_df, col_ma_nganh)
+            st.markdown(html_table, unsafe_allow_html=True)
 
-        # === Phân trang dùng callback, bỏ st.rerun() ===
+        # Phân trang bằng callback
         st.write("---")
         col_prev, col_text, col_next = st.columns([1, 2, 1])
 
