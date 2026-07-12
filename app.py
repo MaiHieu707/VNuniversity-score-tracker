@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 import re
-from school_region import REGION_MAP  # Import mapping khu vực
+from school_region import REGION_MAP, SCHOOL_NAME_MAP  # Import cả hai mapping
 
 # 1. Cấu hình trang
 st.set_page_config(layout="wide", page_title="Hệ Thống Lọc Điểm Chuẩn", page_icon="🎓")
@@ -135,7 +135,16 @@ if st.session_state.search_params is not None:
     filtered_df = df.copy()
 
     if params['query']:
-        filtered_df = filtered_df[filtered_df[col_truong].astype(str).str.contains(params['query'], case=False, na=False)]
+        # Tìm theo cả tên đầy đủ (nếu có) hoặc mã
+        # Lọc dựa trên cột trường hiện tại (có thể là mã hoặc tên)
+        mask = filtered_df[col_truong].astype(str).str.contains(params['query'], case=False, na=False)
+        # Nếu cột là mã trường, ta cũng tìm trong tên đầy đủ đã map
+        if 'Mã Trường' in df.columns:
+            # Tạo cột tạm tên đầy đủ để tìm kiếm
+            full_names = filtered_df['Mã Trường'].map(SCHOOL_NAME_MAP).fillna(filtered_df[col_truong].astype(str))
+            mask = mask | full_names.str.contains(params['query'], case=False, na=False)
+        filtered_df = filtered_df[mask]
+
     if params['ma_nganh'] and col_ma_nganh:
         filtered_df = filtered_df[filtered_df[col_ma_nganh].astype(str).str.contains(params['ma_nganh'], na=False)]
     if params['bac'] != "Tất cả":
@@ -170,12 +179,26 @@ if st.session_state.search_params is not None:
 
         st.markdown(f"**Hiển thị trang {st.session_state.current_page} / {total_pages}**")
 
-        # Ẩn một số cột không cần thiết khi hiển thị
-        cols_to_hide = [c for c in filtered_df.columns if 'unnamed' in c.lower() or c in ['Link_Nguồn', 'Bậc Đào Tạo', 'Khu vực']]
+        # Các cột cần ẩn: chứa 'unnamed', 'Link_Nguồn', 'Bậc Đào Tạo', 'Khu vực', và các cột 'ghi chú', 'note'
+        cols_to_hide = [c for c in filtered_df.columns if (
+            'unnamed' in c.lower() or
+            c in ['Link_Nguồn', 'Bậc Đào Tạo', 'Khu vực'] or
+            'ghi chú' in c.lower() or
+            'note' in c.lower()
+        )]
 
         for school in current_schools:
-            st.markdown(f"<h4 style='color:#69b1ff; padding-top:15px;'>🏫 Trường: {school}</h4>", unsafe_allow_html=True)
+            # Lấy tên đầy đủ nếu có mapping
+            school_display = SCHOOL_NAME_MAP.get(school, school)
+            st.markdown(f"<h4 style='color:#69b1ff; padding-top:15px;'>🏫 Trường: {school_display}</h4>", unsafe_allow_html=True)
+
             display_df = grouped.get_group(school).drop(columns=[col_truong] + cols_to_hide, errors='ignore')
+
+            # Sắp xếp lại cột: nếu có cột mã ngành, đưa lên đầu
+            if col_ma_nganh and col_ma_nganh in display_df.columns:
+                cols = [col_ma_nganh] + [c for c in display_df.columns if c != col_ma_nganh]
+                display_df = display_df[cols]
+
             st.dataframe(display_df, use_container_width=True, hide_index=True)
 
         # Điều hướng trang
