@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 import os
 import re
+from urllib.parse import quote
 from school_region import REGION_MAP, SCHOOL_NAME_MAP
 
 # 1. Cấu hình trang
 st.set_page_config(layout="wide", page_title="Hệ Thống Lọc Điểm Chuẩn", page_icon="🎓")
 
-# 2. CSS giao diện (thêm style cho bảng HTML)
+# 2. CSS giao diện
 custom_style = """
 <style>
     .stApp { background-color: #1e1e2f; color: #ffffff; }
@@ -24,7 +25,6 @@ custom_style = """
         border: none !important; width: 100% !important; padding: 10px 0px !important; font-weight: bold !important;
     }
     div.stButton > button { background-color: #27293d; color: #69b1ff; border: 1px solid #4a4a6a; border-radius: 8px; }
-    /* Style cho bảng HTML */
     .score-table {
         width: 100%;
         border-collapse: collapse;
@@ -46,6 +46,12 @@ custom_style = """
         font-size: 13px;
     }
     .score-table tr:hover { background-color: #2e2e42; }
+    .bookmark-link {
+        color: #ffd700;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .bookmark-link:hover { text-decoration: underline; }
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
@@ -55,6 +61,8 @@ if 'search_params' not in st.session_state:
     st.session_state.search_params = None
 if 'current_page' not in st.session_state:
     st.session_state.current_page = 1
+if 'bookmarks' not in st.session_state:
+    st.session_state.bookmarks = []
 
 # 3. Hàm đọc và xử lý dữ liệu (cache)
 @st.cache_data
@@ -111,6 +119,29 @@ if not os.path.exists(data_file):
 
 df, col_diem, col_khoi, col_truong, col_ma_nganh, clean_khoi = load_and_prepare_data(data_file)
 
+# Xử lý thêm bookmark từ query param (bắt sự kiện click vào link Lưu)
+if 'bookmark' in st.query_params:
+    raw = st.query_params['bookmark']
+    parts = raw.split('|')
+    if len(parts) >= 4:
+        school_code = parts[0]
+        ma_nganh = parts[1]
+        ten_nganh = parts[2]
+        diem = parts[3]
+        new_bm = {
+            'school_code': school_code,
+            'school_name': SCHOOL_NAME_MAP.get(school_code, school_code),
+            'ma_nganh': ma_nganh,
+            'ten_nganh': ten_nganh,
+            'diem': diem
+        }
+        # Tránh trùng lặp (dựa trên school_code + ma_nganh)
+        if not any(b['school_code'] == school_code and b['ma_nganh'] == ma_nganh for b in st.session_state.bookmarks):
+            st.session_state.bookmarks.append(new_bm)
+    # Xóa query param để không lặp lại hành động khi refresh
+    st.query_params.pop('bookmark', None)
+    st.rerun()
+
 # 5. Sidebar - Bộ lọc
 with st.sidebar.form(key='filter_form'):
     st.markdown("<h2 style='color:#8c54ff; text-align:center;'>⚙️ BỘ LỌC ĐIỂM</h2>", unsafe_allow_html=True)
@@ -140,23 +171,50 @@ with st.sidebar.form(key='filter_form'):
         }
         st.session_state.current_page = 1
 
-# 6. Hàm chuyển DataFrame -> HTML table
-def dataframe_to_html(df, col_ma_nganh=None):
-    """Trả về chuỗi HTML table từ DataFrame, với cột Mã ngành được tô màu nhẹ nếu có"""
+# 6. Hàm chuyển DataFrame -> HTML table có thêm cột Lưu
+def dataframe_to_html(df_display, school_code, col_ma_nganh=None):
+    """Trả về chuỗi HTML table, có cột 'Bookmark' để lưu ngành."""
+    if df_display.empty:
+        return ""
+    # Tạo bản sao để thêm cột Bookmark
+    df_with_bookmark = df_display.copy()
+    bookmark_links = []
+    for _, row in df_display.iterrows():
+        ma_nganh_val = row.get('Mã ngành', '') if 'Mã ngành' in row else ''
+        ten_nganh_val = row.get('Tên ngành', '') if 'Tên ngành' in row else ''
+        diem_val = row.get('Điểm chuẩn', '') if 'Điểm chuẩn' in row else ''
+        # Mã hóa để truyền qua URL
+        value = f"{school_code}|{ma_nganh_val}|{ten_nganh_val}|{diem_val}"
+        encoded = quote(value, safe='')
+        link = f'<a href="?bookmark={encoded}" class="bookmark-link">🔖 Lưu</a>'
+        bookmark_links.append(link)
+    df_with_bookmark['Bookmark'] = bookmark_links
+
+    # Sắp xếp cột: Mã ngành (nếu có) -> Tên ngành -> Tổ hợp môn -> Điểm chuẩn -> Ghi chú -> Bookmark
+    priority = []
+    if col_ma_nganh and col_ma_nganh in df_with_bookmark.columns:
+        priority.append(col_ma_nganh)
+    for col in ['Tên ngành', 'Tổ hợp môn', 'Điểm chuẩn', 'Ghi chú', 'Bookmark']:
+        if col in df_with_bookmark.columns:
+            priority.append(col)
+    other_cols = [c for c in df_with_bookmark.columns if c not in priority]
+    df_final = df_with_bookmark[priority + other_cols]
+
     html = '<table class="score-table"><thead><tr>'
-    for col in df.columns:
+    for col in df_final.columns:
+        # Bỏ qua cột Bookmark trong header nếu muốn? Vẫn hiển thị tiêu đề.
         html += f'<th>{col}</th>'
     html += '</tr></thead><tbody>'
-    for _, row in df.iterrows():
+    for _, row in df_final.iterrows():
         html += '<tr>'
-        for col in df.columns:
-            value = row[col]
-            if pd.isna(value):
-                value = ''
-            # Nếu là cột điểm, hiển thị 2 chữ số thập phân
-            if 'điểm' in col.lower() and isinstance(value, (int, float)):
-                value = f'{value:.2f}'
-            html += f'<td>{value}</td>'
+        for col in df_final.columns:
+            val = row[col]
+            if pd.isna(val):
+                val = ''
+            # Định dạng điểm
+            if 'điểm' in col.lower() and isinstance(val, (int, float)):
+                val = f'{val:.2f}'
+            html += f'<td>{val}</td>'
         html += '</tr>'
     html += '</tbody></table>'
     return html
@@ -197,7 +255,6 @@ if st.session_state.search_params is not None:
         total_schools = len(school_list)
         total_pages = max(1, (total_schools - 1) // schools_per_page + 1)
 
-        # Đảm bảo current_page hợp lệ
         if st.session_state.current_page > total_pages:
             st.session_state.current_page = total_pages
         if st.session_state.current_page < 1:
@@ -209,9 +266,10 @@ if st.session_state.search_params is not None:
 
         st.markdown(f"**Hiển thị trang {st.session_state.current_page} / {total_pages}**")
 
+        # Cột cần ẩn (bao gồm Ngày cào)
         cols_to_hide = [c for c in filtered_df.columns if (
             'unnamed' in c.lower() or
-            c in ['Link_Nguồn', 'Bậc Đào Tạo', 'Khu vực'] or
+            c in ['Link_Nguồn', 'Bậc Đào Tạo', 'Khu vực', 'Ngày cào'] or
             'ghi chú' in c.lower() or
             'note' in c.lower()
         )]
@@ -222,16 +280,15 @@ if st.session_state.search_params is not None:
 
             school_df = grouped.get_group(school).drop(columns=[col_truong] + cols_to_hide, errors='ignore')
 
-            # Đưa cột Mã ngành lên đầu nếu có
+            # Đưa Mã ngành lên đầu nếu có
             if col_ma_nganh and col_ma_nganh in school_df.columns:
-                cols = [col_ma_nganh] + [c for c in school_df.columns if c != col_ma_nganh]
-                school_df = school_df[cols]
+                cols_order = [col_ma_nganh] + [c for c in school_df.columns if c != col_ma_nganh]
+                school_df = school_df[cols_order]
 
-            # Hiển thị bảng HTML thay vì st.dataframe
-            html_table = dataframe_to_html(school_df, col_ma_nganh)
+            html_table = dataframe_to_html(school_df, school, col_ma_nganh)
             st.markdown(html_table, unsafe_allow_html=True)
 
-        # Phân trang bằng callback
+        # Phân trang
         st.write("---")
         col_prev, col_text, col_next = st.columns([1, 2, 1])
 
@@ -251,5 +308,48 @@ if st.session_state.search_params is not None:
             st.button("Trang sau ➡️", on_click=go_next, disabled=(st.session_state.current_page >= total_pages))
     else:
         st.warning("⚠️ Không có ngành học/trường nào thỏa mãn tiêu chí của bạn.")
-else:
+
+    # --- Hiển thị danh sách bookmark ---
+    if st.session_state.bookmarks:
+        st.markdown("---")
+        st.subheader("📌 Ngành đã lưu")
+        # Tạo bảng hiển thị
+        bm_df = pd.DataFrame(st.session_state.bookmarks)
+        # Đánh STT
+        bm_df.insert(0, 'STT', range(1, len(bm_df) + 1))
+        # Hiển thị bảng (dùng HTML table an toàn)
+        bm_html = '<table class="score-table"><thead><tr>'
+        for col in bm_df.columns:
+            bm_html += f'<th>{col}</th>'
+        bm_html += '<th>Xoá</th></tr></thead><tbody>'
+        for idx, row in bm_df.iterrows():
+            bm_html += '<tr>'
+            for col in bm_df.columns:
+                val = row[col]
+                if pd.isna(val):
+                    val = ''
+                bm_html += f'<td>{val}</td>'
+            # Nút xoá dùng form nhỏ với button có key duy nhất dựa trên index
+            # Để đơn giản, dùng link xoá tương tự bookmark
+            delete_value = f"{row['school_code']}|{row['ma_nganh']}"
+            bm_html += f'<td><a href="?delete={quote(delete_value)}" style="color:#ff4d4d;">🗑 Xoá</a></td>'
+            bm_html += '</tr>'
+        bm_html += '</tbody></table>'
+        st.markdown(bm_html, unsafe_allow_html=True)
+
+# Xử lý xoá bookmark từ query param
+if 'delete' in st.query_params:
+    raw = st.query_params['delete']
+    parts = raw.split('|')
+    if len(parts) >= 2:
+        school_code = parts[0]
+        ma_nganh = parts[1]
+        st.session_state.bookmarks = [
+            b for b in st.session_state.bookmarks
+            if not (b['school_code'] == school_code and b['ma_nganh'] == ma_nganh)
+        ]
+    st.query_params.pop('delete', None)
+    st.rerun()
+
+if st.session_state.search_params is None:
     st.info("💡 **Chào mừng bạn!** Hãy điều chỉnh BỘ LỌC ĐIỂM bên trái và bấm **[Áp dụng bộ lọc & Tìm kiếm]** để bắt đầu.")
