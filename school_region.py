@@ -1,10 +1,119 @@
 # school_region.py
 
 REGION_MAP = {
-    # ... (giữ nguyên như trước)
+    # I. Hà Nội
+    'QHL': 'Hà Nội', 'QHQ': 'Hà Nội', 'QHY': 'Hà Nội', 'QHI': 'Hà Nội',
+    'QHE': 'Hà Nội', 'QHS': 'Hà Nội', 'QHT': 'Hà Nội', 'QHX': 'Hà Nội',
+    'QHD': 'Hà Nội', 'QHF': 'Hà Nội', 'VJU': 'Hà Nội', 'NVH': 'Hà Nội',
+    'HBT': 'Hà Nội', 'HCP': 'Hà Nội', 'BVH': 'Hà Nội', 'HCH': 'Hà Nội',
+    'KMA': 'Hà Nội', 'NHH': 'Hà Nội', 'HQT': 'Hà Nội', 'HVN': 'Hà Nội',
+    'HPN': 'Hà Nội', 'HVQ': 'Hà Nội', 'HTC': 'Hà Nội', 'HTN': 'Hà Nội',
+    'HTA': 'Hà Nội', 'HYD': 'Hà Nội', 'BKA': 'Hà Nội', 'LDA': 'Hà Nội',
+    'GTA': 'Hà Nội', 'CCM': 'Hà Nội', 'DCN': 'Hà Nội', 'VHD': 'Hà Nội',
+    'DDN': 'Hà Nội', 'DDL': 'Hà Nội', 'DKH': 'Hà Nội', 'FPT': 'Hà Nội',
+    'GHA': 'Hà Nội', 'NHF': 'Hà Nội', 'ETU': 'Hà Nội', 'KCN': 'Hà Nội',
+    'DKS': 'Hà Nội', 'KTA': 'Hà Nội', 'DKK': 'Hà Nội', 'KHA': 'Hà Nội',
+    'LNH': 'Hà Nội', 'DLX': 'Hà Nội', 'LPH': 'Hà Nội', 'MDA': 'Hà Nội',
+    'MTC': 'Hà Nội', 'MTH': 'Hà Nội', 'NTH': 'Hà Nội', 'NTU': 'Hà Nội',
+    'SKD': 'Hà Nội', 'SPH': 'Hà Nội', 'GNT': 'Hà Nội', 'TDH': 'Hà Nội',
+    'FBU': 'Hà Nội', 'DMT': 'Hà Nội', 'DTL': 'Hà Nội', 'TDD': 'Hà Nội',
+    'HNM': 'Hà Nội', 'TMU': 'Hà Nội', 'TLA': 'Hà Nội', 'VHH': 'Hà Nội',
+    'XDA': 'Hà Nội', 'YHB': 'Hà Nội', 'YTC': 'Hà Nội', 'DCQ': 'Hà Nội',
+    'DDU': 'Hà Nội', 'DQK': 'Hà Nội', 'DPD': 'Hà Nội', 'MHN': 'Hà Nội',
+    'PKA': 'Hà Nội', 'CMC': 'Hà Nội',
+
+    # II. TP.HCM
+    'QSY': 'TP.HCM', 'QSB': 'TP.HCM', 'QSC': 'TP.HCM', 'QST': 'TP.HCM',
+    'QSX': 'TP.HCM', 'QSQ': 'TP.HCM', 'QSK': 'TP.HCM', 'HVC': 'TP.HCM',
+    'BVS': 'TP.HCM', 'HHK': 'TP.HCM', 'NVS': 'TP.HCM', 'DCT': 'TP.HCM',
+    'IUH': 'TP.HCM', 'GSA': 'TP.HCM', 'GTS': 'TP.HCM', 'HSU': 'TP.HCM',
+    'KTS': 'TP.HCM', 'UEF': 'TP.HCM', 'KSA': 'TP.HCM', 'DLS': 'TP.HCM',
+    'LPS': 'TP.HCM', 'MBS': 'TP.HCM', 'MTS': 'TP.HCM', 'NHS': 'TP.HCM',
+    'NTS': 'TP.HCM', 'NTT': 'TP.HCM', 'NLS': 'TP.HCM', 'HIU': 'TP.HCM',
+    'SGD': 'TP.HCM', 'DSD': 'TP.HCM', 'SPK': 'TP.HCM', 'SPS': 'TP.HCM',
+    'DMS': 'TP.HCM', 'DTM': 'TP.HCM', 'TDS': 'TP.HCM', 'TLS': 'TP.HCM',
+    'DTT': 'TP.HCM', 'VHS': 'TP.HCM', 'VGU': 'TP.HCM', 'YDS': 'TP.HCM',
+    'TYS': 'TP.HCM', 'DSG': 'TP.HCM', 'GDU': 'TP.HCM', 'DKC': 'TP.HCM',
+    'DHV': 'TP.HCM', 'SIU': 'TP.HCM', 'DVH': 'TP.HCM', 'DVL': 'TP.HCM',
+    'STS': 'TP.HCM', 'DNT': 'TP.HCM', 'UMT': 'TP.HCM',
+
+    # III. Miền Bắc
+    'DTF': 'Miền Bắc', 'DTQ': 'Miền Bắc', 'DTP': 'Miền Bắc', 'DTC': 'Miền Bắc',
+    'DTZ': 'Miền Bắc', 'DTE': 'Miền Bắc', 'DTK': 'Miền Bắc', 'DTN': 'Miền Bắc',
+    'DTS': 'Miền Bắc', 'DTY': 'Miền Bắc', 'DCA': 'Miền Bắc', 'DDA': 'Miền Bắc',
+    'DDM': 'Miền Bắc', 'VUI': 'Miền Bắc', 'DHP': 'Miền Bắc', 'DTV': 'Miền Bắc',
+    'YDD': 'Miền Bắc', 'HLU': 'Miền Bắc', 'DKT': 'Miền Bắc', 'THP': 'Miền Bắc',
+    'HHA': 'Miền Bắc', 'DNB': 'Miền Bắc', 'HDT': 'Miền Bắc', 'THV': 'Miền Bắc',
+    'UKB': 'Miền Bắc', 'DKY': 'Miền Bắc', 'DBG': 'Miền Bắc', 'DBH': 'Miền Bắc',
+    'SDU': 'Miền Bắc', 'SP2': 'Miền Bắc', 'SKH': 'Miền Bắc', 'SKN': 'Miền Bắc',
+    'DFA': 'Miền Bắc', 'TQU': 'Miền Bắc', 'TTB': 'Miền Bắc', 'DTB': 'Miền Bắc',
+    'DDB': 'Miền Bắc', 'TDB': 'Miền Bắc', 'DVP': 'Miền Bắc', 'DVD': 'Miền Bắc',
+    'DVB': 'Miền Bắc', 'YPB': 'Miền Bắc', 'YTB': 'Miền Bắc', 'THU': 'Miền Bắc',
+
+    # IV. Miền Nam
+    'TAG': 'Miền Nam', 'BVU': 'Miền Nam', 'DBL': 'Miền Nam', 'DBD': 'Miền Nam',
+    'TCT': 'Miền Nam', 'DCD': 'Miền Nam', 'MIT': 'Miền Nam', 'DCL': 'Miền Nam',
+    'DLH': 'Miền Nam', 'PVU': 'Miền Nam', 'DNU': 'Miền Nam', 'SPD': 'Miền Nam',
+    'TKG': 'Miền Nam', 'DLA': 'Miền Nam', 'DKB': 'Miền Nam', 'KCC': 'Miền Nam',
+    'LNS': 'Miền Nam', 'DNC': 'Miền Nam', 'EIU': 'Miền Nam', 'VLU': 'Miền Nam',
+    'TTU': 'Miền Nam', 'DTD': 'Miền Nam', 'TDM': 'Miền Nam', 'TTG': 'Miền Nam',
+    'DVT': 'Miền Nam', 'VGU': 'Miền Nam', 'VTT': 'Miền Nam', 'MTU': 'Miền Nam',
+    'YCT': 'Miền Nam',
+
+    # V. Miền Trung - Tây Nguyên
+    'DHD': 'Miền Trung - Tây Nguyên', 'DHC': 'Miền Trung - Tây Nguyên',
+    'DHT': 'Miền Trung - Tây Nguyên', 'DHK': 'Miền Trung - Tây Nguyên',
+    'DHL': 'Miền Trung - Tây Nguyên', 'DHN': 'Miền Trung - Tây Nguyên',
+    'DHA': 'Miền Trung - Tây Nguyên', 'DHF': 'Miền Trung - Tây Nguyên',
+    'DHS': 'Miền Trung - Tây Nguyên', 'DHY': 'Miền Trung - Tây Nguyên',
+    'DHE': 'Miền Trung - Tây Nguyên', 'DHI': 'Miền Trung - Tây Nguyên',
+    'DHQ': 'Miền Trung - Tây Nguyên', 'DDG': 'Miền Trung - Tây Nguyên',
+    'DDY': 'Miền Trung - Tây Nguyên', 'DDP': 'Miền Trung - Tây Nguyên',
+    'DDK': 'Miền Trung - Tây Nguyên', 'DDQ': 'Miền Trung - Tây Nguyên',
+    'DDF': 'Miền Trung - Tây Nguyên', 'DDS': 'Miền Trung - Tây Nguyên',
+    'DSK': 'Miền Trung - Tây Nguyên', 'DDV': 'Miền Trung - Tây Nguyên',
+    'VKU': 'Miền Trung - Tây Nguyên', 'KTD': 'Miền Trung - Tây Nguyên',
+    'BMU': 'Miền Trung - Tây Nguyên', 'DVX': 'Miền Trung - Tây Nguyên',
+    'DCV': 'Miền Trung - Tây Nguyên', 'TDL': 'Miền Trung - Tây Nguyên',
+    'DDT': 'Miền Trung - Tây Nguyên', 'DPX': 'Miền Trung - Tây Nguyên',
+    'DYD': 'Miền Trung - Tây Nguyên', 'DAD': 'Miền Trung - Tây Nguyên',
+    'HHT': 'Miền Trung - Tây Nguyên', 'UKH': 'Miền Trung - Tây Nguyên',
+    'CEA': 'Miền Trung - Tây Nguyên', 'YDN': 'Miền Trung - Tây Nguyên',
+    'HVA': 'Miền Trung - Tây Nguyên', 'TSN': 'Miền Trung - Tây Nguyên',
+    'DPQ': 'Miền Trung - Tây Nguyên', 'DPC': 'Miền Trung - Tây Nguyên',
+    'DPT': 'Miền Trung - Tây Nguyên', 'DPY': 'Miền Trung - Tây Nguyên',
+    'DQB': 'Miền Trung - Tây Nguyên', 'DQU': 'Miền Trung - Tây Nguyên',
+    'DQT': 'Miền Trung - Tây Nguyên', 'DQN': 'Miền Trung - Tây Nguyên',
+    'SKV': 'Miền Trung - Tây Nguyên', 'UFA': 'Miền Trung - Tây Nguyên',
+    'TTN': 'Miền Trung - Tây Nguyên', 'TBD': 'Miền Trung - Tây Nguyên',
+    'TTD': 'Miền Trung - Tây Nguyên', 'TDV': 'Miền Trung - Tây Nguyên',
+    'XDT': 'Miền Trung - Tây Nguyên', 'YKV': 'Miền Trung - Tây Nguyên',
+
+    # VI. Quân đội - Công an
+    'BPH': 'Quân đội - Công an', 'HQH': 'Quân đội - Công an',
+    'HEH': 'Quân đội - Công an', 'NQH': 'Quân đội - Công an',
+    'KQH': 'Quân đội - Công an', 'PKH': 'Quân đội - Công an',
+    'YQH': 'Quân đội - Công an', 'LCH': 'Quân đội - Công an',
+    'ZNH': 'Quân đội - Công an', 'SNH': 'Quân đội - Công an',
+    'DCH': 'Quân đội - Công an', 'KGH': 'Quân đội - Công an',
+    'VPH': 'Quân đội - Công an', 'LAH': 'Quân đội - Công an',
+    'LBH': 'Quân đội - Công an', 'PBH': 'Quân đội - Công an',
+    'HGH': 'Quân đội - Công an', 'TGH': 'Quân đội - Công an',
+    'TTH': 'Quân đội - Công an', 'ANH': 'Quân đội - Công an',
+    'CSH': 'Quân đội - Công an', 'HCA': 'Quân đội - Công an',
+    'ANS': 'Quân đội - Công an', 'CSS': 'Quân đội - Công an',
+    'HCB': 'Quân đội - Công an', 'HCN': 'Quân đội - Công an',
+    'PCH': 'Quân đội - Công an', 'PCS': 'Quân đội - Công an',
+
+    # Các đại học vùng (thường không có điểm chuẩn riêng)
+    'VNU': 'Hà Nội',
+    'VNU-HCM': 'TP.HCM',
+    'TNU': 'Miền Bắc',
+    'HueUni': 'Miền Trung - Tây Nguyên',
+    'UDN': 'Miền Trung - Tây Nguyên',
 }
 
-# Mapping mã trường -> Tên đầy đủ (dựa trên danh sách 285 trường bạn cung cấp)
+# Tên đầy đủ của từng mã trường (dựa trên danh sách bạn cung cấp)
 SCHOOL_NAME_MAP = {
     # I. Hà Nội
     'QHL': 'Khoa Luật (ĐHQG Hà Nội)',
@@ -121,7 +230,7 @@ SCHOOL_NAME_MAP = {
     'TLS': 'Trường Đại học Thủy lợi – Cơ sở 2',
     'DTT': 'Trường Đại học Tôn Đức Thắng',
     'VHS': 'Trường Đại học Văn hóa TP.HCM',
-    'VGU': 'Trường Đại học Việt - Đức',  # Miền Nam cũng có VGU nhưng là trường khác, tạm map thế này
+    'VGU': 'Trường Đại học Việt - Đức',  # Có thể map chung cho Miền Nam
     'YDS': 'Trường Đại học Y Dược TP.HCM',
     'TYS': 'Trường Đại học Y khoa Phạm Ngọc Thạch',
     'DSG': 'Trường Đại học Công nghệ Sài Gòn (*)',
