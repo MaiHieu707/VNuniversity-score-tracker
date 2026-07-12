@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import os
 
-# 1. Cấu hình hiển thị Full màn hình rộng (Wide layout)
+# 1. Cấu hình hiển thị Full màn hình rộng
 st.set_page_config(layout="wide", page_title="Hệ Thống Lọc Điểm Chuẩn Đại Học", page_icon="🎓")
 
-# 2. Tự động áp dụng giao diện Dark Mode & Purple Accent dựa trên UI mẫu
+# 2. Tự động áp dụng giao diện Dark Mode & Purple Accent
 custom_style = """
 <style>
     .stApp {
@@ -39,15 +39,12 @@ st.markdown(custom_style, unsafe_allow_html=True)
 def load_and_prepare_data(file_path):
     df = pd.read_excel(file_path)
     
-    # Định dạng tự động tìm tên các cột bất kể tiêu đề đặt ra sao
     col_diem = [c for c in df.columns if 'điểm' in c.lower() or 'score' in c.lower()][0]
     col_khoi = [c for c in df.columns if 'khối' in c.lower() or 'tổ hợp' in c.lower()][0]
     
-    # Kiểm tra cột mã ngành
     ma_nganh_cols = [c for c in df.columns if 'mã ngành' in c.lower() or 'mã xét tuyển' in c.lower()]
     col_ma_nganh = ma_nganh_cols[0] if ma_nganh_cols else None
     
-    # Kiểm tra hoặc tự tạo cột Mã Trường/Tên Trường để sửa lỗi IndexError
     truong_cols = [c for c in df.columns if 'trường' in c.lower() or 'school' in c.lower() or 'mã trường' in c.lower()]
     if truong_cols:
         col_truong = truong_cols[0]
@@ -59,20 +56,17 @@ def load_and_prepare_data(file_path):
             df['Trường'] = 'Đại Học'
             col_truong = 'Trường'
             
-    # Ép dữ liệu cột điểm chuẩn về dạng số (float)
     df[col_diem] = pd.to_numeric(df[col_diem], errors='coerce')
     return df, col_diem, col_khoi, col_truong, col_ma_nganh
 
-# 4. Kiểm tra sự tồn tại của file dữ liệu cơ sở trước khi chạy App
+# 4. Kiểm tra sự tồn tại của file dữ liệu
 data_file = "Tong_Hop_Diem_Chuan_Toan_Bo.xlsx"
 
 if not os.path.exists(data_file):
     st.title("🎓 HỆ THỐNG LỌC ĐIỂM CHUẨN ĐẠI HỌC")
     st.error(f"❌ Không tìm thấy file cơ sở dữ liệu: `{data_file}`")
-    st.info("💡 Hướng dẫn: Bạn cần chạy file `crawler.py` trước dưới máy để sinh ra file dữ liệu Excel này, sau đó ứng dụng Web mới có thể hoạt động.")
     st.stop()
 
-# Đọc dữ liệu đầu vào
 df, col_diem, col_khoi, col_truong, col_ma_nganh = load_and_prepare_data(data_file)
 
 # 5. Thiết kế giao diện thanh điều khiển (Sidebar bên trái)
@@ -80,25 +74,24 @@ with st.sidebar:
     st.markdown("<h2 style='color:#8c54ff; text-align:center;'>⚙️ BỘ LỌC ĐIỂM</h2>", unsafe_allow_html=True)
     st.write("---")
     
-    # Bộ lọc 1: Tìm kiếm theo tên hoặc mã trường học
     search_query = st.text_input("🔍 Tìm kiếm Trường (Tên hoặc Mã trường):", placeholder="Ví dụ: BKA, Kinh tế...")
-    
-    # Bộ lọc 2: Tìm kiếm theo mã ngành cụ thể
     search_ma_nganh = st.text_input("🆔 Tìm theo Mã Ngành (nếu có):", placeholder="Ví dụ: 7480201...")
     
-    # Bộ lọc 3: Tự động bóc tách danh sách các khối thi duy nhất
+    # --- ĐOẠN FIX LỖI DANH SÁCH KHỐI ---
     raw_khoi_list = df[col_khoi].dropna().astype(str).tolist()
-    clean_khoi = sorted(list(set([k.strip() for items in raw_khoi_list for k in items.split(',')])))
+    # Chuyển toàn bộ dấu chấm phẩy (;) thành dấu phẩy (,) rồi mới cắt để bóc tách triệt để
+    clean_khoi = sorted(list(set([k.strip().upper() for items in raw_khoi_list for k in items.replace(';', ',').split(',')])))
+    # Loại bỏ các chuỗi rỗng vô tình bị dính vào
+    clean_khoi = [k for k in clean_khoi if k != ""]
+    # ------------------------------------
+    
     selected_khoi = st.selectbox("📚 Chọn Khối xét tuyển:", ["Tất cả"] + clean_khoi)
     
-    # Bộ lọc 4: Thanh kéo chọn điểm thi thực tế của thí sinh
     diem_thi = st.slider("🎯 Điểm số của bạn (Bộ lọc sẽ hiển thị trường có điểm chuẩn <= điểm này):", 
-                         min_value=0.0, max_value=30.0, value=25.0, step=0.25)
-    
-    st.write("---")
-    st.caption("Dự án hỗ trợ chọn nguyện vọng Đại Học 🚀")
+                         min_value=0.0, max_value=40.0, value=25.0, step=0.25)
+    # (Đã xóa bỏ caption ở phần dưới)
 
-# 6. Tiến trình xử lý lọc dữ liệu thông minh (Real-time Filtering)
+# 6. Tiến trình xử lý lọc dữ liệu thông minh
 filtered_df = df.copy()
 
 if search_query:
@@ -108,21 +101,19 @@ if search_ma_nganh and col_ma_nganh:
     filtered_df = filtered_df[filtered_df[col_ma_nganh].astype(str).str.contains(search_ma_nganh, na=False)]
 
 if selected_khoi != "Tất cả":
+    # Lọc những ngành có chứa cái khối vừa được chọn (ví dụ chọn A00 thì ngành nào ghi A00; A01 sẽ giữ lại)
     filtered_df = filtered_df[filtered_df[col_khoi].astype(str).str.contains(selected_khoi, case=False, na=False)]
 
-# Loại bỏ các hàng không có điểm hoặc điểm lỗi bằng 0
+# Lọc điểm chuẩn nhỏ hơn hoặc bằng điểm thi và lớn hơn 0
 filtered_df = filtered_df[(filtered_df[col_diem] <= diem_thi) & (filtered_df[col_diem] > 0)]
-
-# Sắp xếp danh sách trả về từ cao xuống thấp
 filtered_df = filtered_df.sort_values(by=col_diem, ascending=False)
 
-# 7. Hiển thị dữ liệu lên khu vực chính (Main board bên phải)
+# 7. Hiển thị dữ liệu lên khu vực chính
 st.title("🎓 HỆ THỐNG LỌC ĐIỂM CHUẨN ĐẠI HỌC")
 st.markdown(f"Đang hiển thị danh sách các ngành phù hợp cho Khối xét tuyển: **{selected_khoi}** với mức điểm số tối đa là **{diem_thi}**")
 
 st.markdown(f"### 📊 Tìm thấy **{len(filtered_df)}** phương án phù hợp")
 
-# Đổ bảng dữ liệu căng full toàn bộ kích thước màn hình máy tính
 st.dataframe(
     filtered_df,
     use_container_width=True,
