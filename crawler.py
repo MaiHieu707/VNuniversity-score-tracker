@@ -6,7 +6,7 @@ import random
 from urllib.parse import urljoin
 from io import StringIO
 
-# Cấu hình tham số hệ thống
+# Cấu hình hệ thống
 base_url = "https://diemthi.tuyensinh247.com"
 main_url = f"{base_url}/diem-chuan.html"
 headers = {
@@ -36,7 +36,7 @@ def get_all_school_links(url):
         return []
 
 def scrape_all_data(links):
-    """BƯỚC 2: Duyệt qua toàn bộ danh sách trường để lấy bảng dữ liệu điểm chuẩn"""
+    """BƯỚC 2: Duyệt qua danh sách trường để lấy bảng dữ liệu điểm chuẩn"""
     all_dataframes = []
     total_schools = len(links)
     
@@ -47,13 +47,18 @@ def scrape_all_data(links):
             response = requests.get(link, headers=headers)
             response.encoding = 'utf-8'
             
-            # Sử dụng StringIO để xử lý triệt để lỗi nhận nhầm chuỗi HTML thành đường dẫn file của Pandas
+            # Sử dụng StringIO để xử lý lỗi nhận nhầm chuỗi HTML thành đường dẫn file của Pandas
             html_data = StringIO(response.text)
             tables = pd.read_html(html_data)
             
             if tables:
                 df_truong = tables[0] 
                 df_truong['Link_Nguồn'] = link 
+                
+                # Tự động bóc tách Mã Trường từ đường link URL
+                ma_truong = link.split('/')[-1].split('-')[-1].replace('.html', '')
+                df_truong['Mã Trường'] = ma_truong.upper()
+                
                 all_dataframes.append(df_truong)
             else:
                 print(f"⚠️ Không tìm thấy bảng dữ liệu ở trang: {link}")
@@ -61,7 +66,7 @@ def scrape_all_data(links):
         except Exception as e:
             print(f"❌ Lỗi khi đọc bảng ở trang {link}: {e}")
             
-        # Cơ chế chống chặn (Anti-block IP): Nghỉ ngơi ngẫu nhiên từ 1 đến 2.5 giây
+        # Cơ chế chống chặn IP (Anti-block): Nghỉ ngơi ngẫu nhiên từ 1 đến 2.5 giây
         time.sleep(random.uniform(1.0, 2.5)) 
 
     if all_dataframes:
