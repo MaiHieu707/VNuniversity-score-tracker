@@ -58,6 +58,7 @@ def load_and_prepare_data(file_path):
     if truong_cols:
         col_truong = truong_cols[0]
     else:
+        # Nếu không có, thử tạo từ Link_Nguồn
         if 'Link_Nguồn' in df.columns:
             df['Mã Trường'] = df['Link_Nguồn'].apply(lambda x: str(x).split('/')[-1].split('-')[-1].replace('.html', '').upper() if pd.notna(x) else 'UNKNOWN')
             col_truong = 'Mã Trường'
@@ -65,7 +66,7 @@ def load_and_prepare_data(file_path):
             df['Trường'] = 'Đại Học'
             col_truong = 'Trường'
 
-    # Tạo cột Bậc Đào Tạo
+    # Tạo cột Bậc Đào Tạo (vẫn giữ nhưng sẽ ẩn khi hiển thị)
     if 'Link_Nguồn' in df.columns:
         df['Bậc Đào Tạo'] = df['Link_Nguồn'].apply(lambda x: 'Cao đẳng' if 'cao-dang' in str(x).lower() else 'Đại học')
     else:
@@ -111,7 +112,7 @@ with st.sidebar.form(key='filter_form'):
         search_ma_nganh = ""
         st.info("ℹ️ Dữ liệu không có cột Mã ngành. Bạn vẫn có thể lọc bằng các tiêu chí khác.")
 
-    bac_dao_tao = st.selectbox("🎓 Chọn Bậc đào tạo:", ["Tất cả", "Đại học", "Cao đẳng"])
+    # Bỏ selectbox Bậc đào tạo
 
     regions_in_data = sorted(df['Khu vực'].unique())
     selected_region = st.selectbox("🌍 Khu vực:", ["Tất cả"] + regions_in_data)
@@ -125,7 +126,6 @@ with st.sidebar.form(key='filter_form'):
         st.session_state.search_params = {
             'query': search_query,
             'ma_nganh': search_ma_nganh,
-            'bac': bac_dao_tao,
             'khoi': selected_khoi,
             'diem': diem_thi,
             'region': selected_region
@@ -149,8 +149,9 @@ if st.session_state.search_params is not None:
 
     if params['ma_nganh'] and col_ma_nganh:
         filtered_df = filtered_df[filtered_df[col_ma_nganh].astype(str).str.contains(params['ma_nganh'], na=False)]
-    if params['bac'] != "Tất cả":
-        filtered_df = filtered_df[filtered_df['Bậc Đào Tạo'] == params['bac']]
+
+    # Bỏ dòng lọc bậc đào tạo
+
     if params['khoi'] != "Tất cả":
         filtered_df = filtered_df[filtered_df[col_khoi].astype(str).str.contains(params['khoi'], case=False, na=False)]
     if params['region'] != "Tất cả":
@@ -160,7 +161,7 @@ if st.session_state.search_params is not None:
     filtered_df = filtered_df[(filtered_df[col_diem] <= params['diem']) & (filtered_df[col_diem] > 0)]
     filtered_df = filtered_df.sort_values(by=col_diem, ascending=False)
 
-    st.markdown(f"Khối: **{params['khoi']}** | Điểm ≤ **{params['diem']}** | Bậc: **{params['bac']}** | Khu vực: **{params['region']}**")
+    st.markdown(f"Khối: **{params['khoi']}** | Điểm ≤ **{params['diem']}** | Khu vực: **{params['region']}**")
     st.markdown(f"### 📊 Tìm thấy **{len(filtered_df)}** ngành phù hợp")
     st.markdown("---")
 
